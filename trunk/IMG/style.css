@@ -1,0 +1,17 @@
+html {
+	background-color: #EEE;
+	margin: 0px;
+	}
+body {
+	width: 1000px;
+	margin: 0px auto;
+	padding: 1em 2em 4em 2em;
+	background-color: #FFF;
+	box-shadow: 2px 2px 8px #BBB;
+	}
+img {
+	padding: 0.4em 0.6em;
+	border: 1px solid #AAA;
+	border-radius: 0.5em;
+	box-shadow: 2px 2px 4px #BBB;
+	}
