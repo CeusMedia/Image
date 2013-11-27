@@ -107,9 +107,9 @@ class CMM_IMG_Processor
 			throw new OutOfRangeException( 'Height must be atleast 1' );
 		$image	= new CMM_IMG_Image;
 		$image->create( $width, $height );
+		$image->setType( $this->image->getType() );
 		imagecopy( $image->getResource(), $this->image->getResource(), 0, 0, $startX, $startY, $width, $height );
 
-		$this->image->setType( $image->getType() );
 		$this->image->setResource( $image->getResource() );											//  replace held image resource object by result
 		return TRUE;
 	}
@@ -219,6 +219,7 @@ class CMM_IMG_Processor
 
 		$image	= new CMM_IMG_Image;
 		$image->create( $width, $height );
+		$image->setType( $this->image->getType() );
 
 		$parameters	= array_merge(																	//  combine parameters from:
 			array( $image->getResource(), $this->image->getResource() ),							//  target and source resources
@@ -231,7 +232,6 @@ class CMM_IMG_Processor
 		$reflection	= new ReflectionFunction( $function );											//  reflect function
 		$reflection->invokeArgs( $parameters );														//  call function with parameters
 
-//		$this->image->setType( $image->getType() );
 		$this->image->setResource( $image->getResource() );											//  replace held image resource object by result
 		return TRUE;
 	}
