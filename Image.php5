@@ -239,7 +239,8 @@ class CMM_IMG_Image{
 			throw new RuntimeException( 'Animated GIFs are not supported' );
 		if( $this->resource )
 			imagedestroy( $this->resource );
-		switch( $info[2] ){
+		$this->type		= $info[2];
+		switch( $this->type ){
 			case IMAGETYPE_GIF:
 				$resource	= imagecreatefromgif( $fileName );
 				break;
@@ -252,7 +253,6 @@ class CMM_IMG_Image{
 			default:
 				throw new Exception( 'Image type "'.$info['mime'].'" is no supported, detected '.$info[2] );
 		}
-		$this->type		= $info[2];
 		$this->fileName	= $fileName;
 		$this->setResource( $resource );
 	}
@@ -283,6 +283,8 @@ class CMM_IMG_Image{
 			default:
 				throw new Exception( 'Image type "'.$type.'" is no supported' );
 		}
+		if( $fileName === $this->fileName )															//  if saved to same file
+			$this->load( $this->fileName );															//  reload image
 	}
 
 	public function setQuality( $quality ){
