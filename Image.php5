@@ -17,23 +17,23 @@
  *	You should have received a copy of the GNU General Public License
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *	@category		cmClasses
- *	@package		UI
+ *	@category		cmModules
+ *	@package		IMG
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
  *	@copyright		2010-2013 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmclasses/
- *	@version		$Id: Image.php5 1027 2013-03-11 03:11:18Z christian.wuerker $
+ *	@link			http://code.google.com/p/cmmodules/
+ *	@version		$Id$
  */
 /**
  *	Image resource reader and writer.
- *	@category		cmClasses
- *	@package		UI
+ *	@category		cmModules
+ *	@package		IMG
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
  *	@copyright		2010-2013 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmclasses/
- *	@version		$Id: Image.php5 1027 2013-03-11 03:11:18Z christian.wuerker $
+ *	@link			http://code.google.com/p/cmmodules/
+ *	@version		$Id$
  *	@todo			Code Doc
  */
 /*

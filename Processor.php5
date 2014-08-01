@@ -17,26 +17,24 @@
  *	You should have received a copy of the GNU General Public License
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *	@category		cmClasses
- *	@package		UI.Image
+ *	@category		cmModules
+ *	@package		IMG
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
  *	@copyright		2010-2013 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmclasses/
- *	@since			0.7.0
- *	@version		$Id: Processing.php5 1023 2013-03-11 02:12:20Z christian.wuerker $
+ *	@link			http://code.google.com/p/cmmodules/
+ *	@version		$Id$
  */
 /**
  *	Processor for resizing, scaling and rotating an image.
- *	@category		cmClasses
- *	@package		UI.Image
+ *	@category		cmModules
+ *	@package		IMG
  *	@uses			CMM_IMG_Image
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
  *	@copyright		2010-2013 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmclasses/
- *	@since			0.7.0
- *	@version		$Id: Processing.php5 1023 2013-03-11 02:12:20Z christian.wuerker $
+ *	@link			http://code.google.com/p/cmmodules/
+ *	@version		$Id$
  */
 class CMM_IMG_Processor
 {
