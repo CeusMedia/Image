@@ -54,8 +54,7 @@ class Processor{
 	 *	@param		float			$maxMegaPixel	Maxiumum megapixels, default: 50, set 0 to disable
 	 *	@return		void
 	 */
-	public function __construct( \CeusMedia\Image\Image $image, $maxMegaPixels = 50 )
-	{
+	public function __construct( \CeusMedia\Image\Image $image, $maxMegaPixels = 50 ){
 		$this->image			= $image;
 		if( !is_null( $maxMegaPixels ) )
 			$this->maxMegaPixels	= $maxMegaPixels;
@@ -79,7 +78,7 @@ class Processor{
 	 *	@param		integer		$startY			Top margin
 	 *	@param		integer		$width			New width
 	 *	@param		integer		$height			New height
-	 *	@return		boolean		Image has been copped
+	 *	@return		object		Processor object for chaining
 	 *	@throws		InvalidArgumentException if left margin is not an integer value
 	 *	@throws		InvalidArgumentException if top margin is not an integer value
 	 *	@throws		InvalidArgumentException if width is not an integer value
@@ -88,8 +87,7 @@ class Processor{
 	 *	@throws		OutOfRangeException if height is lower than 1
 	 *	@throws		OutOfRangeException if resulting image has more mega pixels than allowed
 	 */
-	public function crop( $startX, $startY, $width, $height )
-	{
+	public function crop( $startX, $startY, $width, $height ){
 		if( !is_int( $startX ) )
 			throw new \InvalidArgumentException( 'X start value must be integer' );
 		if( !is_int( $startY ) )
@@ -108,7 +106,7 @@ class Processor{
 		imagecopy( $image->getResource(), $this->image->getResource(), 0, 0, $startX, $startY, $width, $height );
 
 		$this->image->setResource( $image->getResource() );											//  replace held image resource object by result
-		return TRUE;
+		return $this;
 	}
 
 	/**
@@ -120,7 +118,7 @@ class Processor{
 	 *	@param		integer		$brightness		Adjust brightness: -100 min, 0 no change, +100 max
 	 *	@param		float		$gamma			Adjust gamma: 0<x<1 less, 1 no change, 1<x more
 	 *	@param		integer		$sharpen		Adjust sharpness: 0 no change, 100 max
-	 *	@return		void
+	 *	@return		object		Processor object for chaining
 	 */
 	public function enhance( $contrast = 10, $brightness = -10, $gamma = 1.23, $sharpen = 10 ){
 		$contrast		= (int) min( 100, max( -100, $contrast ) );									//  sanitize contrast
@@ -144,20 +142,30 @@ class Processor{
 				$sharpen																			//  opacity
 			);
 		}
+		return $this;
 	}
 
+	/**
+	 *	Applies a filter to image.
+	 *	@access		public
+	 *	@param		string		$filterName		Name of filter to apply
+	 *	@param		array		$arguments		Map of filter arguments
+	 *	@return		object		Processor object for chaining
+	 *	@throws		OutOfRangeException			if filter name is unknown
+	 */
 	public function filter( $filterName, $arguments = array() ){
 		$filter		= new \CeusMedia\Image\Filter( $this->image );
 		if( !method_exists( $filter, $filterName ) )
 			throw new \OutOfRangeException( 'Invalid filter "'.$filterName.'"' );
 		\Alg_Object_MethodFactory::callObjectMethod( $filter, $filterName, $arguments );
+		return $this;
 	}
 
 	/**
 	 *	Flips image horizontally or vertically.
 	 *	@access		public
 	 *	@param		integer		$mode		0: horizontally, 1: vertically
-	 *	@return		boolean		Image has been flipped
+	 *	@return		object		Processor object for chaining
 	 */
 	public function flip( $mode = 0 ){
 		$image	= new \CeusMedia\Image\Image;
@@ -183,7 +191,7 @@ class Processor{
 			);
 		}
 		$this->image->setResource( $image->getResource() );											//  replace held image resource object by result
-		return TRUE;
+		return $this;
 	}
 
 	/**
@@ -192,15 +200,14 @@ class Processor{
 	 *	@param		integer		$width			New width
 	 *	@param		integer		$height			New height
 	 *	@param		boolean		$interpolate	Flag: use interpolation
-	 *	@return		boolean		Image has been resized
+	 *	@return		object		Processor object for chaining
 	 *	@throws		InvalidArgumentException if width is not an integer value
 	 *	@throws		InvalidArgumentException if height is not an integer value
 	 *	@throws		OutOfRangeException if width is lower than 1
 	 *	@throws		OutOfRangeException if height is lower than 1
 	 *	@throws		OutOfRangeException if resulting image has more mega pixels than allowed
 	 */
-	public function resize( $width, $height, $interpolate = TRUE )
-	{
+	public function resize( $width, $height, $interpolate = TRUE ){
 		if( !is_int( $width ) )
 			throw new \InvalidArgumentException( 'Width must be integer' );
 		if( !is_int( $height ) )
@@ -210,7 +217,7 @@ class Processor{
 		if( $height < 1 )
 			throw new \OutOfRangeException( 'Height must be atleast 1' );
 		if( $this->image->getWidth() == $width && $this->image->getHeight() == $height )
-			return FALSE;
+			return $this;
 		if( $this->maxMegaPixels && $width * $height > $this->maxMegaPixels * 1024 * 1024 )
 			throw new \OutOfRangeException( 'Larger than '.$this->maxMegaPixels.'MP ('.$width.'x'.$height.')' );
 
@@ -230,7 +237,7 @@ class Processor{
 		$reflection->invokeArgs( $parameters );														//  call function with parameters
 
 		$this->image->setResource( $image->getResource() );											//  replace held image resource object by result
-		return TRUE;
+		return $this;
 	}
 
 	/**
@@ -240,12 +247,12 @@ class Processor{
 	 *	@param		integer		$angle			Angle to rotate (0-360)
 	 *	@param		integer		$bgColor		Background color
 	 *	@param		integer		$transparency	Flag: use transparency
-	 *	@return		void
+	 *	@return		object		Processor object for chaining
 	 */
-	public function rotate( $angle, $bgColor = 0, $ignoreTransparent = 0 )
-	{
+	public function rotate( $angle, $bgColor = 0, $ignoreTransparent = 0 ){
 		$bgColor	= $this->image->colorTransparent;
 		$this->image->setResource( imagerotate( $this->image->getResource(), -$angle, $bgColor ) );
+		return $this;
 	}
 
 	/**
@@ -255,15 +262,14 @@ class Processor{
 	 *	@param		float		$factorWidth	Factor for width
 	 *	@param		float		$factorHeight	Factor for height
 	 *	@param		boolean		$interpolate	Flag: use interpolation
-	 *	@return		boolean		Image has been scaled
+	 *	@return		object		Processor object for chaining
 	 *	@throws		OutOfRangeException if resulting image has more mega pixels than allowed
 	 */
-	public function scale( $factorWidth, $factorHeight = NULL, $interpolate = TRUE )
-	{
+	public function scale( $factorWidth, $factorHeight = NULL, $interpolate = TRUE ){
 		if( is_null( $factorHeight ) )
 			$factorHeight	= $factorWidth;
 		if( $factorWidth == 1 && $factorHeight == 1 )
-			return FALSE;
+			return $this;
 		$width	= (int) round( $this->image->getWidth() * $factorWidth );
 		$height	= (int) round( $this->image->getHeight() * $factorHeight );
 		$pixels	= $width * $height;
@@ -279,10 +285,9 @@ class Processor{
 	 *	@param		integer		$height			Maximum height
 	 *	@param		boolean		$interpolate	Flag: use interpolation
 	 *	@param		integer		$maxMegaPixel	Maxiumum megapixels
-	 *	@return		boolean		Image has been scaled
+	 *	@return		object		Processor object for chaining
 	 */
-	public function scaleDownToLimit( $width, $height, $interpolate = TRUE, $maxMegaPixel = 50 )
-	{
+	public function scaleDownToLimit( $width, $height, $interpolate = TRUE, $maxMegaPixel = 50 ){
 		if( !is_int( $width ) )
 			throw new \InvalidArgumentException( 'Width must be integer' );
 		if( !is_int( $height ) )
@@ -290,7 +295,7 @@ class Processor{
 		$sourceWidth	= $this->image->getWidth();
 		$sourceHeight	= $this->image->getHeight();
 		if( $sourceWidth <= $width && $sourceHeight <= $height )
-			return FALSE;
+			return $this;
 		$scale = 1;
 		if( $sourceWidth > $width )
 			$scale	*= $width / $sourceWidth;
@@ -308,11 +313,10 @@ class Processor{
 	 *	@param		integer		$height		Minimum height
 	 *	@param		boolean		$interpolate	Flag: use interpolation
 	 *	@param		integer		$maxMegaPixel	Maxiumum megapixels
-	 *	@return		boolean		Image has been scaled
+	 *	@return		object		Processor object for chaining
 	 *	@throws		OutOfRangeException if resulting image has more mega pixels than allowed
 	 */
-	public function scaleUpToLimit( $width, $height, $interpolate = TRUE, $maxMegaPixel = 50 )
-	{
+	public function scaleUpToLimit( $width, $height, $interpolate = TRUE, $maxMegaPixel = 50 ){
 		if( !is_int( $width ) )
 			throw new \InvalidArgumentException( 'Width must be integer' );
 		if( !is_int( $height ) )
@@ -320,7 +324,7 @@ class Processor{
 		$sourceWidth	= $this->image->getWidth();
 		$sourceHeight	= $this->image->getHeight();
 		if( $sourceWidth >= $width && $sourceHeight >= $height )
-			return FALSE;
+			return $this;
 		$scale	= 1;
 		if( $sourceWidth < $width )
 			$scale	*= $width / $sourceWidth;
@@ -345,17 +349,16 @@ class Processor{
 	 *	@param		integer		$maxHeight		Maximum height
 	 *	@param		boolean		$interpolate	Flag: use interpolation
 	 *	@param		integer		$maxMegaPixel	Maxiumum megapixels
-	 *	@return		boolean		Image has been scaled
+	 *	@return		object		Processor object for chaining
 	 */
-	public function scaleToRange( $minWidth, $minHeight, $maxWidth, $maxHeight, $interpolate, $maxMegaPixel = 50 )
-	{
+	public function scaleToRange( $minWidth, $minHeight, $maxWidth, $maxHeight, $interpolate, $maxMegaPixel = 50 ){
 		$width	= $this->image->getWidth();
 		$height	= $this->image->getHeight();
 		if( $width < $minWidth || $height < $minHeight )
 			return $this->scaleUpToLimit( $minWidth, $minHeight, $interpolate, $maxMegaPixel );
 		else if( $width > $maxWidth || $height > $maxHeight )
 			return $this->scaleDownToLimit( $maxWidth, $maxHeight, $interpolate, $maxMegaPixel );
-		return FALSE;
+		return $this;
 	}
 }
 ?>
