@@ -2,7 +2,7 @@
 /**
  *	Image editor. Unfinished.
  *
- *	Copyright (c) 2010-2013 Christian Würker (ceusmedia.com)
+ *	Copyright (c) 2010-2015 Christian Würker (ceusmedia.com)
  *
  *	This program is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -17,36 +17,35 @@
  *	You should have received a copy of the GNU General Public License
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *	@category		cmModules
- *	@package		IMG
+ *	@category		Library
+ *	@package		CeusMedia_Image
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
- *	@copyright		2010-2013 Christian Würker
+ *	@copyright		2010-2015 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmmodules/
- *	@version		$Id$
+ *	@link			https://github.com/CeusMedia/Image
  */
+namespace CeusMedia\Image;
 /**
  *	Image editor. Unfinished.
- *	@category		cmModules
- *	@package		IMG
+ *	@category		Library
+ *	@package		CeusMedia_Image
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
- *	@copyright		2010-2013 Christian Würker
+ *	@copyright		2010-2015 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmmodules/
- *	@version		$Id$
+ *	@link			https://github.com/CeusMedia/Image
  *	@todo			Code Doc
  */
-class CMM_IMG_Editor{
+class Editor{
 
-	public function __construct( CMM_IMG_Image $image ){
+	public function __construct( \CeusMedia\Image\Image $image ){
 		$this->image	= $image;
-		$this->processor	= new CMM_IMG_Processor( $this->image );
-		$this->filter		= new CMM_IMG_Filter( $this->image );
+		$this->processor	= new \CeusMedia\Image\Processor( $this->image );
+		$this->filter		= new \CeusMedia\Image\Filter( $this->image );
 	}
 
-	public function overlay( CMM_IMG_Image $image, $alpha = 100 ){
+	public function overlay\CeusMedia\Image\Image $image, $alpha = 100 ){
 		if( !is_int( $alpha ) )
-			throw new InvalidArgumentException( 'Alpha must be an integer' );
+			throw new \InvalidArgumentException( 'Alpha must be an integer' );
 		$alpha	= min( 100, max( 0, $alpha ) );
 		if( $alpha	== 0 )
 			return;

@@ -2,7 +2,7 @@
 /**
  *	Processor for resizing, scaling and rotating an image.
  *
- *	Copyright (c) 2010-2013 Christian Würker (ceusmedia.com)
+ *	Copyright (c) 2010-2015 Christian Würker (ceusmedia.com)
  *
  *	This program is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -17,60 +17,59 @@
  *	You should have received a copy of the GNU General Public License
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *	@category		cmModules
- *	@package		IMG
+ *	@category		Library
+ *	@package		CeusMedia_Image
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
- *	@copyright		2010-2013 Christian Würker
+ *	@copyright		2010-2015 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmmodules/
- *	@version		$Id$
+ *	@link			https://github.com/CeusMedia/Image
  */
+namespace CeusMedia\Image;
 /**
  *	Processor for resizing, scaling and rotating an image.
- *	@category		cmModules
- *	@package		IMG
- *	@uses			CMM_IMG_Image
+ *	@category		Library
+ *	@package		CeusMedia_Image
+ *	@uses			\CeusMedia\Image\Image
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
- *	@copyright		2010-2013 Christian Würker
+ *	@copyright		2010-2015 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmmodules/
- *	@version		$Id$
+ *	@link			https://github.com/CeusMedia/Image
  */
-class CMM_IMG_Processor
-{
-	/**	@var		CMM_IMG_Image		$image			Image resource object */
+class Processor{
+
+	/**	@var		\CeusMedia\Image\Image		$image			Image resource object */
 	protected $image;
-	
+
 	/**	@param		integer			$maxMegaPixel	Maxiumum megapixels */
 	public $maxMegaPixels			= 1;
 
 	const FLIP_HORIZONTAL			= 0;
 	const FLIP_VERTICAL				= 1;
-	
+
 	/**
 	 *	Constructor.
 	 *	Sets initial image resource object.
 	 *	@access		public
-	 *	@param		CMM_IMG_Image	$image			Image resource object
+	 *	@param		\CeusMedia\Image\Image	$image			Image resource object
 	 *	@param		float			$maxMegaPixel	Maxiumum megapixels, default: 50, set 0 to disable
 	 *	@return		void
 	 */
-	public function __construct( CMM_IMG_Image $image, $maxMegaPixels = 50 )
+	public function __construct( \CeusMedia\Image\Image $image, $maxMegaPixels = 50 )
 	{
 		$this->image			= $image;
 		if( !is_null( $maxMegaPixels ) )
 			$this->maxMegaPixels	= $maxMegaPixels;
 	}
 
-	static public function apply( CMM_IMG_Image $image, $processName, $arguments = array() ){
+	static public function apply( \CeusMedia\Image\Image $image, $processName, $arguments = array() ){
 		$processor		= new self( $image );
 		if( !method_exists( $processor, $processName ) )
-			throw new OutOfRangeException( 'Invalid process "'.$processName.'"' );
-		Alg_Object_MethodFactory::callObjectMethod( $processor, $processName, $arguments );
+			throw new \OutOfRangeException( 'Invalid process "'.$processName.'"' );
+		\Alg_Object_MethodFactory::callObjectMethod( $processor, $processName, $arguments );
 	}
 
-	static public function applyFilter( CMM_IMG_Image $image, $filterName, $arguments = array() ){
-		CMM_IMG_Filter::apply( $image, $filterName, $arguments );
+	static public function applyFilter( \CeusMedia\Image\Image $image, $filterName, $arguments = array() ){
+		\CeusMedia\Image\Filter::apply( $image, $filterName, $arguments );
 	}
 
 	/**
@@ -92,18 +91,18 @@ class CMM_IMG_Processor
 	public function crop( $startX, $startY, $width, $height )
 	{
 		if( !is_int( $startX ) )
-			throw new InvalidArgumentException( 'X start value must be integer' );
+			throw new \InvalidArgumentException( 'X start value must be integer' );
 		if( !is_int( $startY ) )
-			throw new InvalidArgumentException( 'Y start value must be integer' );
+			throw new \InvalidArgumentException( 'Y start value must be integer' );
 		if( !is_int( $width ) )
-			throw new InvalidArgumentException( 'Width must be integer' );
+			throw new \InvalidArgumentException( 'Width must be integer' );
 		if( !is_int( $height ) )
-			throw new InvalidArgumentException( 'Height must be integer' );
+			throw new \InvalidArgumentException( 'Height must be integer' );
 		if( $width < 1 )
-			throw new OutOfRangeException( 'Width must be atleast 1' );
+			throw new \OutOfRangeException( 'Width must be atleast 1' );
 		if( $height < 1 )
-			throw new OutOfRangeException( 'Height must be atleast 1' );
-		$image	= new CMM_IMG_Image;
+			throw new \OutOfRangeException( 'Height must be atleast 1' );
+		$image	= new \CeusMedia\Image\Image;
 		$image->create( $width, $height );
 		$image->setType( $this->image->getType() );
 		imagecopy( $image->getResource(), $this->image->getResource(), 0, 0, $startX, $startY, $width, $height );
@@ -133,11 +132,11 @@ class CMM_IMG_Processor
 		$this->filter( 'brightness', array( $brightness ) );
 		if( $sharpen ){																				//  add sharpness by...
 			$layerSharp		= clone $this->image;													//  ... clone image for sharpness layer
-			$filterLayer	= new CMM_IMG_Filter( $layerSharp );									//  ... start filter on layer image
+			$filterLayer	= new \CeusMedia\Image\Filter( $layerSharp );									//  ... start filter on layer image
 			$filterLayer->removeMean();																//  apply filter to remove mean color values
 			imagecopymerge(																			//  overlay sharper image
 				$this->image->getResource(),														//  main image
-				$layerSharp->getResource(),															//  sharpness layer image 
+				$layerSharp->getResource(),															//  sharpness layer image
 				0, 0,																				//  start coordinates in main image
 				0, 0,																				//  start coordinates in sharpness layer image
 				$this->image->getWidth(),															//  width of resulting image
@@ -148,12 +147,12 @@ class CMM_IMG_Processor
 	}
 
 	public function filter( $filterName, $arguments = array() ){
-		$filter		= new CMM_IMG_Filter( $this->image );
+		$filter		= new \CeusMedia\Image\Filter( $this->image );
 		if( !method_exists( $filter, $filterName ) )
-			throw new OutOfRangeException( 'Invalid filter "'.$filterName.'"' );
-		Alg_Object_MethodFactory::callObjectMethod( $filter, $filterName, $arguments );
+			throw new \OutOfRangeException( 'Invalid filter "'.$filterName.'"' );
+		\Alg_Object_MethodFactory::callObjectMethod( $filter, $filterName, $arguments );
 	}
-	
+
 	/**
 	 *	Flips image horizontally or vertically.
 	 *	@access		public
@@ -161,7 +160,7 @@ class CMM_IMG_Processor
 	 *	@return		boolean		Image has been flipped
 	 */
 	public function flip( $mode = 0 ){
-		$image	= new CMM_IMG_Image;
+		$image	= new \CeusMedia\Image\Image;
 		$width	= $this->image->getWidth();
 		$height	= $this->image->getHeight();
 		$image->create( $width, $height );
@@ -186,7 +185,7 @@ class CMM_IMG_Processor
 		$this->image->setResource( $image->getResource() );											//  replace held image resource object by result
 		return TRUE;
 	}
-	
+
 	/**
 	 *	Resizes image.
 	 *	@access		public
@@ -203,19 +202,19 @@ class CMM_IMG_Processor
 	public function resize( $width, $height, $interpolate = TRUE )
 	{
 		if( !is_int( $width ) )
-			throw new InvalidArgumentException( 'Width must be integer' );
+			throw new \InvalidArgumentException( 'Width must be integer' );
 		if( !is_int( $height ) )
-			throw new InvalidArgumentException( 'Height must be integer' );
+			throw new \InvalidArgumentException( 'Height must be integer' );
 		if( $width < 1 )
-			throw new OutOfRangeException( 'Width must be atleast 1' );
+			throw new \OutOfRangeException( 'Width must be atleast 1' );
 		if( $height < 1 )
-			throw new OutOfRangeException( 'Height must be atleast 1' );
+			throw new \OutOfRangeException( 'Height must be atleast 1' );
 		if( $this->image->getWidth() == $width && $this->image->getHeight() == $height )
 			return FALSE;
 		if( $this->maxMegaPixels && $width * $height > $this->maxMegaPixels * 1024 * 1024 )
-			throw new OutOfRangeException( 'Larger than '.$this->maxMegaPixels.'MP ('.$width.'x'.$height.')' );
+			throw new \OutOfRangeException( 'Larger than '.$this->maxMegaPixels.'MP ('.$width.'x'.$height.')' );
 
-		$image	= new CMM_IMG_Image;
+		$image	= new \CeusMedia\Image\Image;
 		$image->create( $width, $height );
 		$image->setType( $this->image->getType() );
 
@@ -227,7 +226,7 @@ class CMM_IMG_Processor
 		);
 
 		$function = $interpolate ? 'imagecopyresampled' : 'imagecopyresized';						//  function to use depending on interpolation
-		$reflection	= new ReflectionFunction( $function );											//  reflect function
+		$reflection	= new \ReflectionFunction( $function );											//  reflect function
 		$reflection->invokeArgs( $parameters );														//  call function with parameters
 
 		$this->image->setResource( $image->getResource() );											//  replace held image resource object by result
@@ -269,7 +268,7 @@ class CMM_IMG_Processor
 		$height	= (int) round( $this->image->getHeight() * $factorHeight );
 		$pixels	= $width * $height;
 		if( $this->maxMegaPixels && $pixels > ( $this->maxMegaPixels * 1024 * 1024 ) )
-			throw new OutOfRangeException( 'Larger than '.$this->maxMegaPixels.'MP ('.$width.'x'.$height.')' );
+			throw new \OutOfRangeException( 'Larger than '.$this->maxMegaPixels.'MP ('.$width.'x'.$height.')' );
 		return $this->resize( $width, $height, $interpolate, $this->maxMegaPixels );
 	}
 
@@ -285,9 +284,9 @@ class CMM_IMG_Processor
 	public function scaleDownToLimit( $width, $height, $interpolate = TRUE, $maxMegaPixel = 50 )
 	{
 		if( !is_int( $width ) )
-			throw new InvalidArgumentException( 'Width must be integer' );
+			throw new \InvalidArgumentException( 'Width must be integer' );
 		if( !is_int( $height ) )
-			throw new InvalidArgumentException( 'Height must be integer' );
+			throw new \InvalidArgumentException( 'Height must be integer' );
 		$sourceWidth	= $this->image->getWidth();
 		$sourceHeight	= $this->image->getHeight();
 		if( $sourceWidth <= $width && $sourceHeight <= $height )
@@ -315,9 +314,9 @@ class CMM_IMG_Processor
 	public function scaleUpToLimit( $width, $height, $interpolate = TRUE, $maxMegaPixel = 50 )
 	{
 		if( !is_int( $width ) )
-			throw new InvalidArgumentException( 'Width must be integer' );
+			throw new \InvalidArgumentException( 'Width must be integer' );
 		if( !is_int( $height ) )
-			throw new InvalidArgumentException( 'Height must be integer' );
+			throw new \InvalidArgumentException( 'Height must be integer' );
 		$sourceWidth	= $this->image->getWidth();
 		$sourceHeight	= $this->image->getHeight();
 		if( $sourceWidth >= $width && $sourceHeight >= $height )
@@ -330,7 +329,7 @@ class CMM_IMG_Processor
 		$width	= (int) round( $sourceWidth * $scale );
 		$height	= (int) round( $sourceHeight * $scale );
 		if( $this->maxMegaPixels && $width * $height > $this->maxMegaPixels * 1024 * 1024 )
-			throw new OutOfRangeException( 'Larger than '.$this->maxMegaPixels.'MP ('.$width.'x'.$height.')' );
+			throw new \OutOfRangeException( 'Larger than '.$this->maxMegaPixels.'MP ('.$width.'x'.$height.')' );
 		return $this->resize( $width, $height, $interpolate, $maxMegaPixel );
 	}
 

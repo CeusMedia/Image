@@ -2,7 +2,7 @@
 /**
  *	Image resource reader and writer.
  *
- *	Copyright (c) 2010-2013 Christian Würker (ceusmedia.com)
+ *	Copyright (c) 2010-2015 Christian Würker (ceusmedia.com)
  *
  *	This program is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -17,23 +17,22 @@
  *	You should have received a copy of the GNU General Public License
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *	@category		cmModules
- *	@package		IMG
+ *	@category		Library
+ *	@package		CeusMedia_Image
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
- *	@copyright		2010-2013 Christian Würker
+ *	@copyright		2010-2015 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmmodules/
- *	@version		$Id$
+ *	@link			https://github.com/CeusMedia/Image
  */
+namespace CeusMedia\Image;
 /**
  *	Image resource reader and writer.
- *	@category		cmModules
- *	@package		IMG
+ *	@category		Library
+ *	@package		CeusMedia_Image
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
- *	@copyright		2010-2013 Christian Würker
+ *	@copyright		2010-2015 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmmodules/
- *	@version		$Id$
+ *	@link			https://github.com/CeusMedia/Image
  *	@todo			Code Doc
  */
 /*
@@ -58,7 +57,7 @@
 16 - XBM		IMAGETYPE_XBM
 17 - ICO		IMAGETYPE_ICO
 */
-class CMM_IMG_Image{
+class Image{
 
 	protected $resource			= NULL;
 	protected $type				= IMAGETYPE_PNG;
@@ -75,12 +74,12 @@ class CMM_IMG_Image{
 		imagecopy( $copy, $this->resource, 0, 0, 0, 0, $this->width, $this->height );
 		$this->resource = $copy;
 	}
-	
+
 	public function __construct( $fileName = NULL, $tolerateAnimatedGif = FALSE ){
 		if( !is_null( $fileName ) )
 			$this->load( $fileName, $tolerateAnimatedGif );
 	}
-	
+
 	public function __toString(){
 		ob_start();
 		$this->display( FALSE );
@@ -88,7 +87,7 @@ class CMM_IMG_Image{
 		$mimeType	= image_type_to_mime_type( $this->type );
 		return 'data:'.$mimeType.';base64,'.base64_encode( $data );
 	}
-	
+
 	/**
 	 *	Creates a new image resource.
 	 *	@access		public
@@ -124,7 +123,7 @@ class CMM_IMG_Image{
 				break;
 			default:
 				header_remove( 'Content-type' );
-				new CMM_IMG_Error( 'invalid type' );
+				new \CeusMedia\Image\Error( 'invalid type' );
 		}
 	}
 
@@ -229,14 +228,14 @@ class CMM_IMG_Image{
 	 */
 	public function load( $fileName, $tolerateAnimatedGif = FALSE ){
 		if( !file_exists( $fileName ) )
-			throw new RuntimeException( 'Image "'.$fileName.'" is not existing' );
+			throw new \RuntimeException( 'Image "'.$fileName.'" is not existing' );
 		if( !is_readable( $fileName ) )
-			throw new RuntimeException( 'Image "'.$fileName.'" is not readable' );
+			throw new \RuntimeException( 'Image "'.$fileName.'" is not readable' );
 		$info = getimagesize( $fileName );
 		if( !$info )
-			throw new Exception( 'Image "'.$fileName.'" is not of a supported type' );
+			throw new \Exception( 'Image "'.$fileName.'" is not of a supported type' );
 		if( !$tolerateAnimatedGif && self::isAnimated( $fileName ) )
-			throw new RuntimeException( 'Animated GIFs are not supported' );
+			throw new \RuntimeException( 'Animated GIFs are not supported' );
 		if( $this->resource )
 			imagedestroy( $this->resource );
 		$this->type		= $info[2];
@@ -251,7 +250,7 @@ class CMM_IMG_Image{
 				$resource	= imagecreatefrompng( $fileName );
 				break;
 			default:
-				throw new Exception( 'Image type "'.$info['mime'].'" is no supported, detected '.$info[2] );
+				throw new \Exception( 'Image type "'.$info['mime'].'" is no supported, detected '.$info[2] );
 		}
 		$this->fileName	= $fileName;
 		$this->setResource( $resource );
@@ -272,7 +271,7 @@ class CMM_IMG_Image{
 		if( !$fileName )
 			$fileName	= $this->fileName;
 		if( !$fileName )
-			throw new RuntimeException( 'No image file name set' );
+			throw new \RuntimeException( 'No image file name set' );
 		switch( $type ){
 			case IMAGETYPE_GIF:
 				return imagegif( $this->resource, $fileName );
@@ -281,7 +280,7 @@ class CMM_IMG_Image{
 			case IMAGETYPE_PNG:
 				return imagepng( $this->resource, $fileName );
 			default:
-				throw new Exception( 'Image type "'.$type.'" is no supported' );
+				throw new \Exception( 'Image type "'.$type.'" is no supported' );
 		}
 		if( $fileName === $this->fileName )															//  if saved to same file
 			$this->load( $this->fileName );															//  reload image
@@ -299,7 +298,7 @@ class CMM_IMG_Image{
 	 */
 	public function setResource( $resource ){
 		if( !is_resource( $resource ) )
-			throw new InvalidArgumentException( 'Must be a valid image resource' );
+			throw new \InvalidArgumentException( 'Must be a valid image resource' );
 		if( $this->resource )
 			imagedestroy( $this->resource );
 
@@ -321,7 +320,7 @@ class CMM_IMG_Image{
 
 	public function setType( $type ){
 		if( !( ImageTypes() & $type ) )
-			throw new InvalidArgumentException( 'Invalid type' );
+			throw new \InvalidArgumentException( 'Invalid type' );
 		$this->type	= $type;
 		if( $this->fileName ){
 			$baseName	= pathinfo( $this->fileName, PATHINFO_FILENAME );

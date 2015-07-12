@@ -2,7 +2,7 @@
 /**
  *	Image filter.
  *
- *	Copyright (c) 2010-2012 Christian Würker (ceusmedia.com)
+ *	Copyright (c) 2010-2015 Christian Würker (ceusmedia.com)
  *
  *	This program is free software: you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -17,42 +17,41 @@
  *	You should have received a copy of the GNU General Public License
  *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *	@category		cmModules
- *	@package		IMG
+ *	@category		Library
+ *	@package		CeusMedia_Image
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
- *	@copyright		2010-2012 Christian Würker
+ *	@copyright		2010-2015 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmmodules/
- *	@version		$Id$
+ *	@link			https://github.com/CeusMedia/Image
  */
+namespace CeusMedia\Image;
 /**
  *	Image filter.
- *	@category		cmModules
- *	@package		IMG
- *	@uses			CMM_IMG_Image
+ *	@category		Library
+ *	@package		CeusMedia_Image
+ *	@uses			\CeusMedia\Image\Image
  *	@author			Christian Würker <christian.wuerker@ceusmedia.de>
- *	@copyright		2010-2012 Christian Würker
+ *	@copyright		2010-2015 Christian Würker
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
- *	@link			http://code.google.com/p/cmmodules/
- *	@version		$Id$
+ *	@link			https://github.com/CeusMedia/Image
  *	@see			http://www.php.net/manual/en/function.imagefilter.php
  *	@see			http://www.tuxradar.com/practicalphp/11/2/15
  */
-class CMM_IMG_Filter{
-	/**	@var		CMM_IMG_Image		$resource		Image resource object */
+class Filter{
+	/**	@var		\CeusMedia\Image\Image		$resource		Image resource object */
 	protected $image;
 
-	public function __construct( CMM_IMG_Image $image ){
+	public function __construct( \CeusMedia\Image\Image $image ){
 		$this->image	= $image;
 	}
 
-	static public function apply( CMM_IMG_Image $image, $filterName, $arguments = array() ){
+	static public function apply( \CeusMedia\Image\Image $image, $filterName, $arguments = array() ){
 		$filter		= new self( $image );
 		if( !method_exists( $filter, $filterName ) )
-			throw new OutOfRangeException( 'Invalid filter "'.$filterName.'"' );
-		Alg_Object_MethodFactory::callObjectMethod( $filter, $filterName, $arguments );
+			throw new \OutOfRangeException( 'Invalid filter "'.$filterName.'"' );
+		\Alg_Object_MethodFactory::callObjectMethod( $filter, $filterName, $arguments );
 	}
-	
+
 	/**
 	 *	Blurs the image using the Gaussian method.
 	 *	@access		public
@@ -169,11 +168,11 @@ class CMM_IMG_Filter{
 	 */
 	public function pixelate2( $sizeX = 20, $sizeY = 20){
 		if( !is_int( $sizeX ) || $sizeX < 1 )
-			throw new InvalidArgumentException( 'SizeX must be integer and atleast 1' );
+			throw new \InvalidArgumentException( 'SizeX must be integer and atleast 1' );
 		if( !is_int( $sizeY ) || $sizeY < 1 )
-			throw new InvalidArgumentException( 'SizeY must be integer and atleast 1' );
+			throw new \InvalidArgumentException( 'SizeY must be integer and atleast 1' );
 		if( $sizeX == 1 && $sizeY == 1 )
-			throw new InvalidArgumentException( 'One of the pixel sizes must differ from 1ss' );
+			throw new \InvalidArgumentException( 'One of the pixel sizes must differ from 1ss' );
 		$width	= $this->image->getWidth();
 		$height	= $this->image->getHeight();
 		$image	= $this->image->getResource();
@@ -182,10 +181,10 @@ class CMM_IMG_Filter{
 				$rgb	= imagecolorsforindex( $image, imagecolorat( $image, $x, $y ) );			//  get the color for current pixel
 				$color	= imagecolorclosest( $image, $rgb['red'], $rgb['green'], $rgb['blue'] );	//  get the closest color from palette
 				imagefilledrectangle( $image, $x, $y, $x+$sizeX-1, $y+$sizeY-1, $color);			//  fill block
-			}       
+			}
 		}
 	}
-	
+
 	/**
 	 *	Uses mean removal to achieve a "sketchy" effect.
 	 *	@access		public
@@ -197,7 +196,7 @@ class CMM_IMG_Filter{
 	}
 
 	public function sepia(){
-		
+
 		imagefilter( $this->image->getResource(), IMG_FILTER_GRAYSCALE );
 		imagefilter( $this->image->getResource(), IMG_FILTER_BRIGHTNESS, -30 );
 		imagefilter( $this->image->getResource(), IMG_FILTER_COLORIZE, 90, 55, 30 );
