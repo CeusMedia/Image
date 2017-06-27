@@ -16,19 +16,17 @@
     "email": "office@ceusmedia.de",
     "jabber": "ceus-media@jabber.org"
   },
-  "minimum-stability": "dev",
   "require": {
     "php": "^5.3 || ^7",
     "ceus-media/common": "^0.8",
     "ceus-media/cache": "^0"
   },
   "require-dev": {
-    "ceus-media/common": "dev-master",
-    "ceus-media/cache": "dev-master"
   },
   "autoload": {
     "psr-4": {
         "CeusMedia\\Image\\": ["src/"]
     }
-  }
+  },
+  "minimum-stability": "dev"
 }
