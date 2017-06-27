@@ -25,7 +25,7 @@
   "require-dev": {
     "ceus-media/common": "dev-master",
     "ceus-media/cache": "dev-master"
-  }
+  },
   "autoload": {
     "psr-4": {
         "CeusMedia\\Image\\": ["src/"]
