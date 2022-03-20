@@ -25,6 +25,11 @@
  *	@link			https://github.com/CeusMedia/Image
  */
 namespace CeusMedia\Image;
+
+use Exception;
+use InvalidArgumentException;
+use RuntimeException;
+
 /**
  *	Image resource reader and writer.
  *	@category		Library
@@ -57,30 +62,46 @@ namespace CeusMedia\Image;
 16 - XBM		IMAGETYPE_XBM
 17 - ICO		IMAGETYPE_ICO
 */
-class Image{
-
+class Image
+{
+	/** @var resource|NULL $resource */
 	protected $resource			= NULL;
+
+	/** @var integer $type */
 	protected $type				= IMAGETYPE_PNG;
+
+	/** @var integer $width */
 	protected $width			= 0;
+
+	/** @var integer $height */
 	protected $height			= 0;
+
+	/** @var integer $quality */
 	protected $quality			= 100;
+
+	/** @var string|NULL $fileName */
 	protected $fileName			= NULL;
+
+	/** @var int|NULL $colorTransparent */
 	public $colorTransparent;
 
-	public function __clone(){
+	public function __clone()
+	{
 		if( !$this->resource )
 			return;
-		$copy	= imagecreatetruecolor($this->width, $this->height);
+		$copy	= imagecreatetruecolor( $this->width, $this->height );
 		imagecopy( $copy, $this->resource, 0, 0, 0, 0, $this->width, $this->height );
 		$this->resource = $copy;
 	}
 
-	public function __construct( $fileName = NULL, $tolerateAnimatedGif = FALSE ){
+	public function __construct( string $fileName = NULL, bool $tolerateAnimatedGif = FALSE )
+	{
 		if( !is_null( $fileName ) )
 			$this->load( $fileName, $tolerateAnimatedGif );
 	}
 
-	public function __toString(){
+	public function __toString()
+	{
 		ob_start();
 		$this->display( FALSE );
 		$data		= ob_get_clean();
@@ -94,21 +115,21 @@ class Image{
 	 *	@param		integer		$width		Width of image
 	 *	@param		integer		$height		Height of image
 	 *	@param		boolean		$trueColor	Flag: create an TrueColor Image (24-bit depth and without fixed palette)
-	 *	@param		double		$alpha		Alpha channel value (0-100)
 	 *	@return		void
-	 *	@todo		is alpha needed ?
 	 */
-	public function create( $width, $height, $trueColor = TRUE, $alpha = 0 ){
-		$resource	= $trueColor ? imagecreatetruecolor( $width, $height ) : imagecreate( $width, $height );
-		$this->type	= $trueColor ? IMAGETYPE_PNG : IMAGETYPE_GIF;
-		$this->setResource( $resource, $alpha );
+	public function create( $width, $height, $trueColor = TRUE )
+	{
+		$resource		= $trueColor ? imagecreatetruecolor( $width, $height ) : imagecreate( $width, $height );
+		if( $resource ){
+			$this->type		= $trueColor ? IMAGETYPE_PNG : IMAGETYPE_GIF;
+			$this->width	= $width;
+			$this->height	= $height;
+			$this->setResource( $resource );
+		}
 	}
 
-	public function getColor( $red, $green, $blue, $alpha = 0 ){
-		return imagecolorallocatealpha( $this->resource, $red, $green, $blue, $alpha );
-	}
-
-	public function display( $sendContentType = TRUE ){
+	public function display( bool $sendContentType = TRUE ): void
+	{
 		if( $sendContentType )
 			header( 'Content-type: '.$this->getMimeType() );
 		switch( $this->getType() ){
@@ -123,16 +144,22 @@ class Image{
 				break;
 			default:
 				header_remove( 'Content-type' );
-				new \CeusMedia\Image\Error( 'invalid type' );
+				new Error( 'invalid type' );
 		}
+	}
+
+	public function getColor( int $red, int $green, int $blue, int $alpha = 0 ): int
+	{
+		return imagecolorallocatealpha( $this->resource, $red, $green, $blue, $alpha );
 	}
 
 	/**
 	 *	...
 	 *	@access		public
-	 *	@return		string
+	 *	@return		string|NULL
 	 */
-	public function getFileName(){
+	public function getFileName(): ?string
+	{
 		return $this->fileName;
 	}
 
@@ -141,7 +168,8 @@ class Image{
 	 *	@access		public
 	 *	@return		integer
 	 */
-	public function getHeight(){
+	public function getHeight()
+	{
 		return $this->height;
 	}
 
@@ -150,7 +178,8 @@ class Image{
 	 *	@access		public
 	 *	@return		string
 	 */
-	public function getMimeType(){
+	public function getMimeType()
+	{
 		return image_type_to_mime_type( $this->type );
 	}
 
@@ -159,7 +188,8 @@ class Image{
 	 *	@access		public
 	 *	@return		integer
 	 */
-	public function getQuality(){
+	public function getQuality()
+	{
 		return $this->quality;
 	}
 
@@ -168,7 +198,8 @@ class Image{
 	 *	@access		public
 	 *	@return		resource
 	 */
-	public function getResource(){
+	public function getResource()
+	{
 		return $this->resource;
 	}
 
@@ -177,7 +208,8 @@ class Image{
 	 *	@access		public
 	 *	@return		integer
 	 */
-	public function getType(){
+	public function getType()
+	{
 		return $this->type;
 	}
 
@@ -186,7 +218,8 @@ class Image{
 	 *	@access		public
 	 *	@return		integer
 	 */
-	public function getWidth(){
+	public function getWidth()
+	{
 		return $this->width;
 	}
 
@@ -197,7 +230,8 @@ class Image{
 	 *	@param		string		$filePath	Path Name of Image File
 	 *	@return		boolean		TRUE if Image File is an animated GIF
 	 */
-	public static function isAnimated( $filePath ){
+	public static function isAnimated( $filePath )
+	{
 		$content	= file_get_contents( $filePath );
 		$pos1		= 0;
 		$count		= 0;
@@ -218,7 +252,8 @@ class Image{
 	/**
 	 *	Reads an image from file, supporting several file types.
 	 *	@access		public
-	 *	@param		string		$fileName		Name of image file
+	 *	@param		string		$fileName				Name of image file
+	 *	@param		boolean		$tolerateAnimatedGif	Flag: ???
 	 *	@return		void
 	 *	@throws		RuntimeException if file is not existing
 	 *	@throws		RuntimeException if file is not readable
@@ -226,16 +261,17 @@ class Image{
 	 *	@throws		Exception if detected image type is not supported
 	 *	@throws		Exception if image type is not supported for reading
 	 */
-	public function load( $fileName, $tolerateAnimatedGif = FALSE ){
+	public function load( $fileName, bool $tolerateAnimatedGif = FALSE )
+	{
 		if( !file_exists( $fileName ) )
-			throw new \RuntimeException( 'Image "'.$fileName.'" is not existing' );
+			throw new RuntimeException( 'Image "'.$fileName.'" is not existing' );
 		if( !is_readable( $fileName ) )
-			throw new \RuntimeException( 'Image "'.$fileName.'" is not readable' );
+			throw new RuntimeException( 'Image "'.$fileName.'" is not readable' );
 		$info = getimagesize( $fileName );
 		if( !$info )
-			throw new \Exception( 'Image "'.$fileName.'" is not of a supported type' );
+			throw new Exception( 'Image "'.$fileName.'" is not of a supported type' );
 		if( !$tolerateAnimatedGif && self::isAnimated( $fileName ) )
-			throw new \RuntimeException( 'Animated GIFs are not supported' );
+			throw new RuntimeException( 'Animated GIFs are not supported' );
 		if( $this->resource )
 			imagedestroy( $this->resource );
 		$this->type		= $info[2];
@@ -250,10 +286,12 @@ class Image{
 				$resource	= imagecreatefrompng( $fileName );
 				break;
 			default:
-				throw new \Exception( 'Image type "'.$info['mime'].'" is no supported, detected '.$info[2] );
+				throw new Exception( 'Image type "'.$info['mime'].'" is no supported, detected '.$info[2] );
 		}
-		$this->fileName	= $fileName;
-		$this->setResource( $resource );
+		if( $resource ){
+			$this->fileName	= $fileName;
+			$this->setResource( $resource );
+		}
 	}
 
 	/**
@@ -262,32 +300,37 @@ class Image{
 	 *	@param		string		$fileName		Name of new image file
 	 *	@param		integer		$type			Type of image (IMAGETYPE_GIF|IMAGETYPE_JPEG|IMAGETYPE_PNG)
 	 *	@return		boolean
-	 *	@throws		RuntimeException if neither file has been loaded before nor a file name is given
-	 *	@throws		Exception if image type is not supported for writing
+	 *	@throws		RuntimeException	if neither file has been loaded before nor a file name is given
+	 *	@throws		Exception			if image type is not supported for writing
 	 */
-	public function save( $fileName = NULL, $type = NULL ){
-		if( !$type )
-			$type	= $this->type;
+	public function save( $fileName = NULL, $type = NULL )
+	{
+		$type		= $type ?? $this->type;
+		$fileName	= $fileName ?? $this->fileName;
 		if( !$fileName )
-			$fileName	= $this->fileName;
-		if( !$fileName )
-			throw new \RuntimeException( 'No image file name set' );
+			throw new RuntimeException( 'No image file name set' );
 		switch( $type ){
 			case IMAGETYPE_GIF:
-				return imagegif( $this->resource, $fileName );
+				imagegif( $this->resource, $fileName );
+				break;
 			case IMAGETYPE_JPEG:
-				return imagejpeg( $this->resource, $fileName, $this->quality );
+				imagejpeg( $this->resource, $fileName, $this->quality );
+				break;
 			case IMAGETYPE_PNG:
-				return imagepng( $this->resource, $fileName );
+				imagepng( $this->resource, $fileName );
+				break;
 			default:
-				throw new \Exception( 'Image type "'.$type.'" is no supported' );
+				throw new Exception( 'Image type "'.$type.'" is no supported' );
 		}
 		if( $fileName === $this->fileName )															//  if saved to same file
 			$this->load( $this->fileName );															//  reload image
+		return TRUE;
 	}
 
-	public function setQuality( $quality ){
+	public function setQuality( int $quality ): self
+	{
 		$this->quality = max( 0, min( 100, $quality ) );
+		return $this;
 	}
 
 	/**
@@ -295,10 +338,12 @@ class Image{
 	 *	@access		public
 	 *	@param		resource	$resource		Image resource
 	 *	@return		void
+	 *	@thows		InvalidArgumentException
 	 */
-	public function setResource( $resource ){
+	public function setResource( $resource )
+	{
 		if( !is_resource( $resource ) )
-			throw new \InvalidArgumentException( 'Must be a valid image resource' );
+			throw new InvalidArgumentException( 'Must be a valid image resource' );
 		if( $this->resource )
 			imagedestroy( $this->resource );
 
@@ -313,14 +358,23 @@ class Image{
 		imagesavealpha( $this->resource, TRUE );													//  copying the complete alpha channel
 	}
 
-	public function setTransparentColor( $red, $green, $blue, $alpha = 0 ){
+/*	public function setTransparentColor( $red, $green, $blue, int $alpha = 0 )
+	{
 		$color	= imagecolorallocatealpha( $this->resource, $red, $green, $blue, $alpha );
 		imagecolortransparent( $this->resource, $color );
+	}*/
+
+	public function setTransparentColor( int $color ): self
+	{
+		imagecolortransparent( $this->resource, $color );
+		$this->colorTransparent	= $color;	
+		return $this;
 	}
 
-	public function setType( $type ){
+	public function setType( int $type ): self
+	{
 		if( !( ImageTypes() & $type ) )
-			throw new \InvalidArgumentException( 'Invalid type' );
+			throw new InvalidArgumentException( 'Invalid type' );
 		$this->type	= $type;
 		if( $this->fileName ){
 			$baseName	= pathinfo( $this->fileName, PATHINFO_FILENAME );
@@ -328,6 +382,6 @@ class Image{
 			$extension	= image_type_to_extension( $this->type );
 			$this->fileName	= $pathName.'/'.$baseName.$extension;
 		}
+		return $this;
 	}
 }
-?>

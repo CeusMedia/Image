@@ -25,6 +25,12 @@
  *	@link			https://github.com/CeusMedia/Image
  */
 namespace CeusMedia\Image;
+
+use Alg_Object_MethodFactory;
+use InvalidArgumentException;
+use OutOfRangeException;
+use ReflectionFunction;
+
 /**
  *	Processor for resizing, scaling and rotating an image.
  *	@category		Library
@@ -35,40 +41,43 @@ namespace CeusMedia\Image;
  *	@license		http://www.gnu.org/licenses/gpl-3.0.txt GPL 3
  *	@link			https://github.com/CeusMedia/Image
  */
-class Processor{
-
-	/**	@var		\CeusMedia\Image\Image		$image			Image resource object */
-	protected $image;
-
-	/**	@param		integer			$maxMegaPixel	Maxiumum megapixels */
-	public $maxMegaPixels			= 1;
-
+class Processor
+{
 	const FLIP_HORIZONTAL			= 0;
 	const FLIP_VERTICAL				= 1;
+
+	/**	@var		Image			$image			Image resource object */
+	protected $image;
+
+	/**	@var		float			$maxMegaPixels	Maxiumum megapixels */
+	public $maxMegaPixels			= 1;
 
 	/**
 	 *	Constructor.
 	 *	Sets initial image resource object.
 	 *	@access		public
-	 *	@param		\CeusMedia\Image\Image	$image			Image resource object
-	 *	@param		float			$maxMegaPixel	Maxiumum megapixels, default: 50, set 0 to disable
+	 *	@param		Image		$image			Image resource object
+	 *	@param		float|NULL	$maxMegaPixels	Maxiumum megapixels, default: 50, set 0 to disable
 	 *	@return		void
 	 */
-	public function __construct( \CeusMedia\Image\Image $image, $maxMegaPixels = 50 ){
+	public function __construct( Image $image, ?float $maxMegaPixels = 50 )
+	{
 		$this->image			= $image;
 		if( !is_null( $maxMegaPixels ) )
 			$this->maxMegaPixels	= $maxMegaPixels;
 	}
 
-	static public function apply( \CeusMedia\Image\Image $image, $processName, $arguments = array() ){
+	public static function apply( Image $image, string $processName, array $arguments = array() ): void
+	{
 		$processor		= new self( $image );
 		if( !method_exists( $processor, $processName ) )
-			throw new \OutOfRangeException( 'Invalid process "'.$processName.'"' );
-		\Alg_Object_MethodFactory::callObjectMethod( $processor, $processName, $arguments );
+			throw new OutOfRangeException( 'Invalid process "'.$processName.'"' );
+		Alg_Object_MethodFactory::callObjectMethod( $processor, $processName, $arguments );
 	}
 
-	static public function applyFilter( \CeusMedia\Image\Image $image, $filterName, $arguments = array() ){
-		\CeusMedia\Image\Filter::apply( $image, $filterName, $arguments );
+	public static function applyFilter( Image $image, string $filterName, array $arguments = array() ): void
+	{
+		Filter::apply( $image, $filterName, $arguments );
 	}
 
 	/**
@@ -78,29 +87,18 @@ class Processor{
 	 *	@param		integer		$startY			Top margin
 	 *	@param		integer		$width			New width
 	 *	@param		integer		$height			New height
-	 *	@return		object		Processor object for chaining
-	 *	@throws		InvalidArgumentException if left margin is not an integer value
-	 *	@throws		InvalidArgumentException if top margin is not an integer value
-	 *	@throws		InvalidArgumentException if width is not an integer value
-	 *	@throws		InvalidArgumentException if height is not an integer value
+	 *	@return		self		Processor object for chaining
 	 *	@throws		OutOfRangeException if width is lower than 1
 	 *	@throws		OutOfRangeException if height is lower than 1
 	 *	@throws		OutOfRangeException if resulting image has more mega pixels than allowed
 	 */
-	public function crop( $startX, $startY, $width, $height ){
-		if( !is_int( $startX ) )
-			throw new \InvalidArgumentException( 'X start value must be integer' );
-		if( !is_int( $startY ) )
-			throw new \InvalidArgumentException( 'Y start value must be integer' );
-		if( !is_int( $width ) )
-			throw new \InvalidArgumentException( 'Width must be integer' );
-		if( !is_int( $height ) )
-			throw new \InvalidArgumentException( 'Height must be integer' );
+	public function crop( int $startX, int $startY, int $width, int $height ): self
+	{
 		if( $width < 1 )
-			throw new \OutOfRangeException( 'Width must be atleast 1' );
+			throw new OutOfRangeException( 'Width must be atleast 1' );
 		if( $height < 1 )
-			throw new \OutOfRangeException( 'Height must be atleast 1' );
-		$image	= new \CeusMedia\Image\Image;
+			throw new OutOfRangeException( 'Height must be atleast 1' );
+		$image	= new Image;
 		$image->create( $width, $height );
 		$image->setType( $this->image->getType() );
 		imagecopy( $image->getResource(), $this->image->getResource(), 0, 0, $startX, $startY, $width, $height );
@@ -118,9 +116,10 @@ class Processor{
 	 *	@param		integer		$brightness		Adjust brightness: -100 min, 0 no change, +100 max
 	 *	@param		float		$gamma			Adjust gamma: 0<x<1 less, 1 no change, 1<x more
 	 *	@param		integer		$sharpen		Adjust sharpness: 0 no change, 100 max
-	 *	@return		object		Processor object for chaining
+	 *	@return		self		Processor object for chaining
 	 */
-	public function enhance( $contrast = 10, $brightness = -10, $gamma = 1.23, $sharpen = 10 ){
+	public function enhance( $contrast = 10, $brightness = -10, $gamma = 1.23, $sharpen = 10 ): self
+	{
 		$contrast		= (int) min( 100, max( -100, $contrast ) );									//  sanitize contrast
 		$brightness		= (int) min( 100, max( -100, $brightness ) );								//  sanitize brightness
 		$gamma			= max( 0, $gamma );															//  sanitize gamma
@@ -150,14 +149,15 @@ class Processor{
 	 *	@access		public
 	 *	@param		string		$filterName		Name of filter to apply
 	 *	@param		array		$arguments		Map of filter arguments
-	 *	@return		object		Processor object for chaining
+	 *	@return		self		Processor object for chaining
 	 *	@throws		OutOfRangeException			if filter name is unknown
 	 */
-	public function filter( $filterName, $arguments = array() ){
+	public function filter( $filterName, $arguments = array() ): self
+	{
 		$filter		= new \CeusMedia\Image\Filter( $this->image );
 		if( !method_exists( $filter, $filterName ) )
-			throw new \OutOfRangeException( 'Invalid filter "'.$filterName.'"' );
-		\Alg_Object_MethodFactory::callObjectMethod( $filter, $filterName, $arguments );
+			throw new OutOfRangeException( 'Invalid filter "'.$filterName.'"' );
+		Alg_Object_MethodFactory::callObjectMethod( $filter, $filterName, $arguments );
 		return $this;
 	}
 
@@ -165,10 +165,11 @@ class Processor{
 	 *	Flips image horizontally or vertically.
 	 *	@access		public
 	 *	@param		integer		$mode		0: horizontally, 1: vertically
-	 *	@return		object		Processor object for chaining
+	 *	@return		self		Processor object for chaining
 	 */
-	public function flip( $mode = 0 ){
-		$image	= new \CeusMedia\Image\Image;
+	public function flip( $mode = 0 ): self
+	{
+		$image	= new Image;
 		$width	= $this->image->getWidth();
 		$height	= $this->image->getHeight();
 		$image->create( $width, $height );
@@ -197,31 +198,28 @@ class Processor{
 	/**
 	 *	Resizes image.
 	 *	@access		public
-	 *	@param		integer		$width			New width
-	 *	@param		integer		$height			New height
-	 *	@param		boolean		$interpolate	Flag: use interpolation
-	 *	@return		object		Processor object for chaining
-	 *	@throws		InvalidArgumentException if width is not an integer value
-	 *	@throws		InvalidArgumentException if height is not an integer value
+	 *	@param		integer			$width			New width
+	 *	@param		integer			$height			New height
+	 *	@param		boolean			$interpolate	Flag: use interpolation
+	 *	@param		float|NULL		$maxMegaPixels	Maxiumum megapixels
+	 *	@return		self			Processor object for chaining
 	 *	@throws		OutOfRangeException if width is lower than 1
 	 *	@throws		OutOfRangeException if height is lower than 1
 	 *	@throws		OutOfRangeException if resulting image has more mega pixels than allowed
 	 */
-	public function resize( $width, $height, $interpolate = TRUE ){
-		if( !is_int( $width ) )
-			throw new \InvalidArgumentException( 'Width must be integer' );
-		if( !is_int( $height ) )
-			throw new \InvalidArgumentException( 'Height must be integer' );
+	public function resize( int $width, int $height, bool $interpolate = TRUE, float $maxMegaPixels = NULL ): self
+	{
 		if( $width < 1 )
-			throw new \OutOfRangeException( 'Width must be atleast 1' );
+			throw new OutOfRangeException( 'Width must be atleast 1' );
 		if( $height < 1 )
-			throw new \OutOfRangeException( 'Height must be atleast 1' );
+			throw new OutOfRangeException( 'Height must be atleast 1' );
 		if( $this->image->getWidth() == $width && $this->image->getHeight() == $height )
 			return $this;
-		if( $this->maxMegaPixels && $width * $height > $this->maxMegaPixels * 1024 * 1024 )
-			throw new \OutOfRangeException( 'Larger than '.$this->maxMegaPixels.'MP ('.$width.'x'.$height.')' );
+		$maxMegaPixels	= $maxMegaPixels ?? $this->maxMegaPixels;
+		if( $maxMegaPixels && $width * $height > $maxMegaPixels * 1024 * 1024 )
+			throw new OutOfRangeException( 'Larger than '.$maxMegaPixels.'MP ('.$width.'x'.$height.')' );
 
-		$image	= new \CeusMedia\Image\Image;
+		$image	= new Image;
 		$image->create( $width, $height );
 		$image->setType( $this->image->getType() );
 
@@ -233,7 +231,7 @@ class Processor{
 		);
 
 		$function = $interpolate ? 'imagecopyresampled' : 'imagecopyresized';						//  function to use depending on interpolation
-		$reflection	= new \ReflectionFunction( $function );											//  reflect function
+		$reflection	= new ReflectionFunction( $function );											//  reflect function
 		$reflection->invokeArgs( $parameters );														//  call function with parameters
 
 		$this->image->setResource( $image->getResource() );											//  replace held image resource object by result
@@ -245,11 +243,10 @@ class Processor{
 	 *	Resulting image may have different dimensions.
 	 *	@access		public
 	 *	@param		integer		$angle			Angle to rotate (0-360)
-	 *	@param		integer		$bgColor		Background color
-	 *	@param		integer		$transparency	Flag: use transparency
-	 *	@return		object		Processor object for chaining
+	 *	@return		self		Processor object for chaining
 	 */
-	public function rotate( $angle, $bgColor = 0, $ignoreTransparent = 0 ){
+	public function rotate( int $angle ): self
+	{
 		$bgColor	= $this->image->colorTransparent;
 		$this->image->setResource( imagerotate( $this->image->getResource(), -$angle, $bgColor ) );
 		return $this;
@@ -262,10 +259,11 @@ class Processor{
 	 *	@param		float		$factorWidth	Factor for width
 	 *	@param		float		$factorHeight	Factor for height
 	 *	@param		boolean		$interpolate	Flag: use interpolation
-	 *	@return		object		Processor object for chaining
+	 *	@return		self		Processor object for chaining
 	 *	@throws		OutOfRangeException if resulting image has more mega pixels than allowed
 	 */
-	public function scale( $factorWidth, $factorHeight = NULL, $interpolate = TRUE ){
+	public function scale( $factorWidth, $factorHeight = NULL, $interpolate = TRUE, float $maxMegaPixels = NULL ): self
+	{
 		if( is_null( $factorHeight ) )
 			$factorHeight	= $factorWidth;
 		if( $factorWidth == 1 && $factorHeight == 1 )
@@ -273,25 +271,20 @@ class Processor{
 		$width	= (int) round( $this->image->getWidth() * $factorWidth );
 		$height	= (int) round( $this->image->getHeight() * $factorHeight );
 		$pixels	= $width * $height;
-		if( $this->maxMegaPixels && $pixels > ( $this->maxMegaPixels * 1024 * 1024 ) )
-			throw new \OutOfRangeException( 'Larger than '.$this->maxMegaPixels.'MP ('.$width.'x'.$height.')' );
 		return $this->resize( $width, $height, $interpolate, $this->maxMegaPixels );
 	}
 
 	/**
 	 *	Scales image down to a maximum size if larger than limit.
 	 *	@access		public
-	 *	@param		integer		$width			Maximum width
-	 *	@param		integer		$height			Maximum height
-	 *	@param		boolean		$interpolate	Flag: use interpolation
-	 *	@param		integer		$maxMegaPixel	Maxiumum megapixels
-	 *	@return		object		Processor object for chaining
+	 *	@param		integer			$width			Maximum width
+	 *	@param		integer			$height			Maximum height
+	 *	@param		boolean			$interpolate	Flag: use interpolation
+	 *	@param		float|NULL		$maxMegaPixels	Maxiumum megapixels
+	 *	@return		self			Processor object for chaining
 	 */
-	public function scaleDownToLimit( $width, $height, $interpolate = TRUE, $maxMegaPixel = 50 ){
-		if( !is_int( $width ) )
-			throw new \InvalidArgumentException( 'Width must be integer' );
-		if( !is_int( $height ) )
-			throw new \InvalidArgumentException( 'Height must be integer' );
+	public function scaleDownToLimit( int $width, int $height, bool $interpolate = TRUE, float $maxMegaPixels = NULL ): self
+	{
 		$sourceWidth	= $this->image->getWidth();
 		$sourceHeight	= $this->image->getHeight();
 		if( $sourceWidth <= $width && $sourceHeight <= $height )
@@ -303,24 +296,21 @@ class Processor{
 			$scale	*= $height / ( $sourceHeight * $scale );
 		$width	= (int) round( $sourceWidth * $scale );
 		$height	= (int) round( $sourceHeight * $scale );
-		return $this->resize( $width, $height, $interpolate, $maxMegaPixel );
+		return $this->resize( $width, $height, $interpolate, $maxMegaPixels );
 	}
 
 	/**
 	 *	Scales image up to a minimum size if smaller than limit.
 	 *	@access		public
-	 *	@param		integer		$width		Minimum width
-	 *	@param		integer		$height		Minimum height
-	 *	@param		boolean		$interpolate	Flag: use interpolation
-	 *	@param		integer		$maxMegaPixel	Maxiumum megapixels
-	 *	@return		object		Processor object for chaining
+	 *	@param		integer			$width		Minimum width
+	 *	@param		integer			$height		Minimum height
+	 *	@param		boolean			$interpolate	Flag: use interpolation
+	 *	@param		float|NULL		$maxMegaPixels	Maxiumum megapixels
+	 *	@return		self			Processor object for chaining
 	 *	@throws		OutOfRangeException if resulting image has more mega pixels than allowed
 	 */
-	public function scaleUpToLimit( $width, $height, $interpolate = TRUE, $maxMegaPixel = 50 ){
-		if( !is_int( $width ) )
-			throw new \InvalidArgumentException( 'Width must be integer' );
-		if( !is_int( $height ) )
-			throw new \InvalidArgumentException( 'Height must be integer' );
+	public function scaleUpToLimit( int $width, int $height, $interpolate = TRUE, float $maxMegaPixels = NULL ): self
+	{
 		$sourceWidth	= $this->image->getWidth();
 		$sourceHeight	= $this->image->getHeight();
 		if( $sourceWidth >= $width && $sourceHeight >= $height )
@@ -332,9 +322,7 @@ class Processor{
 			$scale	*= $height / ( $sourceHeight * $scale );
 		$width	= (int) round( $sourceWidth * $scale );
 		$height	= (int) round( $sourceHeight * $scale );
-		if( $this->maxMegaPixels && $width * $height > $this->maxMegaPixels * 1024 * 1024 )
-			throw new \OutOfRangeException( 'Larger than '.$this->maxMegaPixels.'MP ('.$width.'x'.$height.')' );
-		return $this->resize( $width, $height, $interpolate, $maxMegaPixel );
+		return $this->resize( $width, $height, $interpolate, $maxMegaPixels );
 	}
 
 	/**
@@ -343,22 +331,22 @@ class Processor{
 	 *	Range maximum has higher priority.
 	 *	For better resolution this method will first maximize and than minimize if both is needed.
 	 *	@access		public
-	 *	@param		integer		$minWidth		Minimum width
-	 *	@param		integer		$minHeight		Minimum height
-	 *	@param		integer		$maxWidth		Maximum width
-	 *	@param		integer		$maxHeight		Maximum height
-	 *	@param		boolean		$interpolate	Flag: use interpolation
-	 *	@param		integer		$maxMegaPixel	Maxiumum megapixels
-	 *	@return		object		Processor object for chaining
+	 *	@param		integer			$minWidth		Minimum width
+	 *	@param		integer			$minHeight		Minimum height
+	 *	@param		integer			$maxWidth		Maximum width
+	 *	@param		integer			$maxHeight		Maximum height
+	 *	@param		boolean			$interpolate	Flag: use interpolation
+	 *	@param		float|NULL		$maxMegaPixels	Maxiumum megapixels
+	 *	@return		self			Processor object for chaining
 	 */
-	public function scaleToRange( $minWidth, $minHeight, $maxWidth, $maxHeight, $interpolate, $maxMegaPixel = 50 ){
+	public function scaleToRange( int $minWidth, int $minHeight, int $maxWidth, int $maxHeight, bool $interpolate, float $maxMegaPixels = NULL ): self
+	{
 		$width	= $this->image->getWidth();
 		$height	= $this->image->getHeight();
 		if( $width < $minWidth || $height < $minHeight )
-			return $this->scaleUpToLimit( $minWidth, $minHeight, $interpolate, $maxMegaPixel );
+			return $this->scaleUpToLimit( $minWidth, $minHeight, $interpolate, $maxMegaPixels );
 		else if( $width > $maxWidth || $height > $maxHeight )
-			return $this->scaleDownToLimit( $maxWidth, $maxHeight, $interpolate, $maxMegaPixel );
+			return $this->scaleDownToLimit( $maxWidth, $maxHeight, $interpolate, $maxMegaPixels );
 		return $this;
 	}
 }
-?>

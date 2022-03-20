@@ -25,6 +25,11 @@
  *	@link			https://github.com/CeusMedia/Image
  */
 namespace CeusMedia\Image;
+
+use Alg_Object_MethodFactory;
+use InvalidArgumentException;
+use OutOfRangeException;
+
 /**
  *	Image filter.
  *	@category		Library
@@ -37,19 +42,22 @@ namespace CeusMedia\Image;
  *	@see			http://www.php.net/manual/en/function.imagefilter.php
  *	@see			http://www.tuxradar.com/practicalphp/11/2/15
  */
-class Filter{
-	/**	@var		\CeusMedia\Image\Image		$resource		Image resource object */
+class Filter
+{
+	/**	@var		Image		$resource		Image resource object */
 	protected $image;
 
-	public function __construct( \CeusMedia\Image\Image $image ){
+	public function __construct( Image $image )
+	{
 		$this->image	= $image;
 	}
 
-	static public function apply( \CeusMedia\Image\Image $image, $filterName, $arguments = array() ){
+	public static function apply( Image $image, string $filterName, array $arguments = array() )
+	{
 		$filter		= new self( $image );
 		if( !method_exists( $filter, $filterName ) )
-			throw new \OutOfRangeException( 'Invalid filter "'.$filterName.'"' );
-		\Alg_Object_MethodFactory::callObjectMethod( $filter, $filterName, $arguments );
+			throw new OutOfRangeException( 'Invalid filter "'.$filterName.'"' );
+		Alg_Object_MethodFactory::callObjectMethod( $filter, $filterName, $arguments );
 	}
 
 	/**
@@ -57,7 +65,8 @@ class Filter{
 	 *	@access		public
 	 *	@return		boolean
 	 */
-	public function blurGaussian(){
+	public function blurGaussian()
+	{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_GAUSSIAN_BLUR );
 	}
 
@@ -66,7 +75,8 @@ class Filter{
 	 *	@access		public
 	 *	@return		boolean
 	 */
-	public function blurSelective(){
+	public function blurSelective()
+	{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_SELECTIVE_BLUR );
 	}
 
@@ -77,7 +87,8 @@ class Filter{
 	 *	@param		integer		$level		Value between -255 and 255
 	 *	@return		boolean
 	 */
-	public function brightness( $level ){
+	public function brightness( $level )
+	{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_BRIGHTNESS, $level );
 	}
 
@@ -90,7 +101,8 @@ class Filter{
 	 *	@param		integer		$alpha		Alpha channel, value between 0 (opacue) and 127 (transparent)
 	 *	@return		boolean
 	 */
-	public function colorize( $red, $green, $blue, $alpha = 0 ){
+	public function colorize( int $red, int $green, int $blue, int $alpha = 0 )
+	{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_COLORIZE, $red, $green, $blue, $alpha );
 	}
 
@@ -101,11 +113,13 @@ class Filter{
 	 *	@param		integer		$level		Value between -100 and 100
 	 *	@return		boolean
 	 */
-	public function contrast( $level ){
+	public function contrast( int $level )
+	{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_CONTRAST, -1 * $level );
 	}
 
-	public function gamma( $level ){
+	public function gamma( float $level )
+	{
 		return imagegammacorrect( $this->image->getResource(), 1.0, (double) $level );
 	}
 
@@ -114,7 +128,8 @@ class Filter{
 	 *	@access		public
 	 *	@return		boolean
 	 */
-	public function detectEdges(){
+	public function detectEdges()
+	{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_EDGEDETECT );
 	}
 
@@ -123,7 +138,8 @@ class Filter{
 	 *	@access		public
 	 *	@return		boolean
 	 */
-	public function emboss(){
+	public function emboss()
+	{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_EMBOSS );
 	}
 
@@ -132,7 +148,8 @@ class Filter{
 	 *	@access		public
 	 *	@return		boolean
 	 */
-	public function grayscale(){
+	public function grayscale()
+	{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_GRAYSCALE );
 	}
 
@@ -141,20 +158,22 @@ class Filter{
 	 *	@access		public
 	 *	@return		boolean
 	 */
-	public function negate(){
+	public function negate()
+	{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_NEGATE );
 	}
 
 	/**
 	 *	Applies pixelation effect to the image.
-	 *	Attention: This method seem to be not working, at least for me. There method pixelate2 exists.
+	 *	Attention: This method seem to be not working, at least for me. Therefor method pixelate2 exists.
 	 *	@access		public
 	 *	@param		integer		$size		Block size in pixels
 	 *	@param		boolean		$effect		Flag: activate advanced pixelation effect
 	 *	@return		boolean
 	 */
 
-	public function pixelate( $size, $effect = FALSE ){
+	public function pixelate( int $size, bool $effect = FALSE )
+	{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_PIXELATE, $size, $effect );
 	}
 
@@ -166,13 +185,14 @@ class Filter{
 	 *	@param		integer		$sizeY		Block height in pixels
 	 *	@return		void
 	 */
-	public function pixelate2( $sizeX = 20, $sizeY = 20){
-		if( !is_int( $sizeX ) || $sizeX < 1 )
-			throw new \InvalidArgumentException( 'SizeX must be integer and atleast 1' );
-		if( !is_int( $sizeY ) || $sizeY < 1 )
-			throw new \InvalidArgumentException( 'SizeY must be integer and atleast 1' );
+	public function pixelate2( int $sizeX = 20, int $sizeY = 20 )
+	{
+		if( $sizeX < 1 )
+			throw new InvalidArgumentException( 'SizeX must be atleast 1' );
+		if( $sizeY < 1 )
+			throw new InvalidArgumentException( 'SizeY must be atleast 1' );
 		if( $sizeX == 1 && $sizeY == 1 )
-			throw new \InvalidArgumentException( 'One of the pixel sizes must differ from 1ss' );
+			throw new InvalidArgumentException( 'One of the pixel sizes must differ from 1ss' );
 		$width	= $this->image->getWidth();
 		$height	= $this->image->getHeight();
 		$image	= $this->image->getResource();
@@ -195,8 +215,8 @@ class Filter{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_MEAN_REMOVAL );
 	}
 
-	public function sepia(){
-
+	public function sepia()
+	{
 		imagefilter( $this->image->getResource(), IMG_FILTER_GRAYSCALE );
 		imagefilter( $this->image->getResource(), IMG_FILTER_BRIGHTNESS, -30 );
 		imagefilter( $this->image->getResource(), IMG_FILTER_COLORIZE, 90, 55, 30 );
@@ -216,4 +236,3 @@ class Filter{
 		return imagefilter( $this->image->getResource(), IMG_FILTER_SMOOTH, $weight );
 	}
 }
-?>

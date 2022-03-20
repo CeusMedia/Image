@@ -1,0 +1,7 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Parameter \\#4 \\$arg2 of function imagefilter expects int, bool given\\.$#"
+			count: 1
+			path: src/Filter.php
+
